@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect} from "react";
 import "./App.css";
 import {
   Radar,
@@ -344,10 +344,19 @@ function App() {
   const [page, setPage] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [baguaLayout, setBaguaLayout] = useState("grid"); // 'grid' | 'list'
+  const [alreadyDone, setAlreadyDone] = useState(false);
   const resultRef = useRef(null);
 
   const totalPages = Math.ceil(QUESTIONS.length / PAGE_SIZE);
+
+  // 检查是否已完成测试
+  useEffect(() => {
+    const lsFlag = localStorage.getItem("tested_bigfive") === "true";
+    const cookieFlag = document.cookie.split(";").some(c => c.trim().startsWith("tested_bigfive="));
+    if (lsFlag && cookieFlag) {
+      setAlreadyDone(true);
+    }
+  }, []);
 
   /** —— 分页 —— */
   const pageQuestions = useMemo(() => {
@@ -360,16 +369,31 @@ function App() {
   const handleChange = (id, value) => {
     setAnswers((prev) => ({ ...prev, [id]: Number(value) }));
   };
+
   const handleNext = () => {
-    if (!canNext) return alert("请先完成本页所有题目");
-    if (page < totalPages) setPage((p) => p + 1);
-    else setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!canNext) return alert("请先完成本页所有题目");
+
+  if (page < totalPages) {
+    setPage((p) => p + 1);
+  } else {
+    // 最后一页，提交测评 + 设置“已完成”标记
+    localStorage.setItem("tested_bigfive", "true");
+    document.cookie = "tested_bigfive=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+
+    setSubmitted(true);
+    setAlreadyDone(true);
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const handlePrev = () => {
-    if (page > 1) setPage((p) => p - 1);
+    if (page > 1) {
+      setPage((p) => p - 1);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
 
   /** —— 总分与均分 —— */
   const totals = { O: 0, C: 0, E: 0, A: 0, N: 0 };
@@ -532,303 +556,428 @@ const handleDownloadPDF = async () => {
       </header>
 
       {/* —— 问卷 —— */}
-      {!submitted ? (
-        <div className="card">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={page}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <div className="progress-wrap">
-                <div className="progress-top">
-                  <span>进度</span>
-                  <span>
-                    {((page / Math.ceil(QUESTIONS.length / PAGE_SIZE)) * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-inner"
-                    style={{
-                      width: `${(page / Math.ceil(QUESTIONS.length / PAGE_SIZE)) * 100}%`,
-                    }}
-                  />
-                </div>
+      {/* —— 已测过：阻止继续 —— */}
+{alreadyDone && !submitted ? (
+  <div
+    className="card"
+    style={{
+      padding: "45px 30px",
+      textAlign: "center",
+      borderRadius: 24,
+      background: "#ffffff",
+      border: "1px solid #e3f1ef",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.07)",
+    }}
+  >
+    <div
+      style={{
+        marginBottom: 18,
+        display: "inline-block",
+        padding: "18px 24px",
+        borderRadius: "50%",
+        background: "rgba(43, 122, 120, 0.1)",
+      }}
+    >
+      <span style={{ fontSize: 34, color: "#2b7a78" }}>🔒</span>
+    </div>
+
+    <h2
+      className="section-title"
+      style={{
+        fontSize: 28,
+        marginBottom: 12,
+        color: "#1d4946",
+        letterSpacing: "0.8px",
+      }}
+    >
+      测评访问已锁定
+    </h2>
+
+    <p
+      style={{
+        marginTop: 12,
+        fontSize: 16,
+        color: "#40514e",
+        lineHeight: 1.85,
+      }}
+    >
+      你已经完成过本次 OCEAN 大五人格测评。
+      <br />
+      为确保结果的科学性与稳定性，每位用户仅可参与一次。
+    </p>
+
+    <div
+      style={{
+        marginTop: 32,
+        padding: "22px 26px",
+        borderRadius: 18,
+        background: "linear-gradient(135deg, #e5f8f4 0%, #d4efe9 100%)",
+        textAlign: "left",
+        fontSize: 15.5,
+        color: "#1f4745",
+        lineHeight: 1.8,
+        boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: "bold",
+          marginBottom: 6,
+          color: "#2b7a78",
+        }}
+      >
+        📌 测评说明
+      </div>
+      <ul style={{ paddingLeft: 20, margin: 0 }}>
+        <li>你的结果已成功被系统记录。</li>
+        <li>系统检测到你之前已经完成过此测评，因此当前入口已关闭。</li>
+        <li>本测评侧重趣味与自我认知，仅供参考，不代表专业心理结论。</li>
+      </ul>
+    </div>
+  </div>
+) : !submitted ? (
+  /* —— 问卷 —— */
+  <div className="card">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={page}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <div className="progress-wrap">
+          <div className="progress-top">
+            <span>进度</span>
+            <span>
+              {(
+                (page / Math.ceil(QUESTIONS.length / PAGE_SIZE)) *
+                100
+              ).toFixed(0)}
+              %
+            </span>
+          </div>
+          <div className="progress-bar">
+            <div
+              className="progress-inner"
+              style={{
+                width: `${
+                  (page / Math.ceil(QUESTIONS.length / PAGE_SIZE)) * 100
+                }%`,
+              }}
+            />
+          </div>
+        </div>
+
+        <h2 className="section-title">
+          第 {page} 页 / 共 {Math.ceil(QUESTIONS.length / PAGE_SIZE)} 页
+        </h2>
+
+        <div className="q-list">
+          {pageQuestions.map((q) => (
+            <div key={q.id} className="q-item">
+              <div className="q-text">
+                <span className="q-id">{q.id}</span>
+                <span>{q.text}</span>
               </div>
-
-              <h2 className="section-title">第 {page} 页 / 共 {Math.ceil(QUESTIONS.length / PAGE_SIZE)} 页</h2>
-
-              <div className="q-list">
-                {pageQuestions.map((q) => (
-                  <div key={q.id} className="q-item">
-                    <div className="q-text">
-                      <span className="q-id">{q.id}</span>
-                      <span>{q.text}</span>
-                    </div>
-                    <div className="likert">
-                      {[1, 2, 3, 4, 5].map((v) => (
-                        <label
-                          key={v}
-                          className={`likert-option ${answers[q.id] === v ? "active" : ""}`}
-                        >
-                          <input
-                            type="radio"
-                            name={`q${q.id}`}
-                            value={v}
-                            checked={answers[q.id] === v}
-                            onChange={(e) => handleChange(q.id, e.target.value)}
-                          />
-                          <div className="dot" />
-                          <div className="lbl">{v}</div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+              <div className="likert">
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <label
+                    key={v}
+                    className={`likert-option ${
+                      answers[q.id] === v ? "active" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`q${q.id}`}
+                      value={v}
+                      checked={answers[q.id] === v}
+                      onChange={(e) => handleChange(q.id, e.target.value)}
+                    />
+                    <div className="dot" />
+                    <div className="lbl">{v}</div>
+                  </label>
                 ))}
               </div>
-
-              <div className="nav">
-                {page > 1 && (
-                  <button className="btn ghost" onClick={handlePrev}>
-                    上一页
-                  </button>
-                )}
-                <button
-                  className="btn primary"
-                  onClick={handleNext}
-                  disabled={!canNext}
-                >
-                  {page < totalPages ? "下一页" : "提交测评"}
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          ))}
         </div>
-      ) : (
-        /* —— 结果页 —— */
-        <motion.div
-          ref={resultRef}
-          className="card"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          {/* 概览摘要卡片 */}
-          <h2 className="section-title center">测评结果</h2>
-          <div className="summary-grid">
-            {["O", "C", "E", "A", "N"].map((t) => {
-              const lev = levelTag(avgs[t]);
-              return (
-                <div className="sum-card" key={t}>
-                  <div className="sum-top">
-                    <div className="sum-name">{CN[t]}</div>
-                    <span className={lev.className}>{lev.tag}</span>
-                  </div>
-                  <div className="sum-score">{fmt(avgs[t])}</div>
-                  <div className="sum-brief">
-                    {t === "O" && "想象力 / 创新 / 接纳新事物"}
-                    {t === "C" && "自律 / 条理 / 目标达成"}
-                    {t === "E" && "活力 / 表达 / 社交倾向"}
-                    {t === "A" && "共情 / 合作 / 信任"}
-                    {t === "N" && "情绪调节 / 抗压"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
 
-          {/* 图表区 */}
-          <div className="charts-grid">
-            <div className="chart-card">
-              <div className="chart-title">五维度柱状对比</div>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData}>
+        <div className="nav">
+          {page > 1 && (
+            <button className="btn ghost" onClick={handlePrev}>
+              上一页
+            </button>
+          )}
+          <button
+            className="btn primary"
+            onClick={handleNext}
+            disabled={!canNext}
+          >
+            {page < totalPages ? "下一页" : "提交测评"}
+          </button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  </div>
+) : (
+  /* —— 结果页 —— */
+  <motion.div
+    ref={resultRef}
+    className="card"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    {/* 概览摘要卡片 */}
+    <h2 className="section-title center">测评结果</h2>
+    <div className="summary-grid">
+      {["O", "C", "E", "A", "N"].map((t) => {
+        const lev = levelTag(avgs[t]);
+        return (
+          <div className="sum-card" key={t}>
+            <div className="sum-top">
+              <div className="sum-name">{CN[t]}</div>
+              <span className={lev.className}>{lev.tag}</span>
+            </div>
+            <div className="sum-score">{fmt(avgs[t])}</div>
+            <div className="sum-brief">
+              {t === "O" && "想象力 / 创新 / 接纳新事物"}
+              {t === "C" && "自律 / 条理 / 目标达成"}
+              {t === "E" && "活力 / 表达 / 社交倾向"}
+              {t === "A" && "共情 / 合作 / 信任"}
+              {t === "N" && "情绪调节 / 抗压"}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* 图表区 */}
+    <div className="charts-grid">
+      <div className="chart-card">
+        <div className="chart-title">五维度柱状对比</div>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={barData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis domain={[1, 5]} />
+            <Tooltip />
+            <ReferenceLine
+              y={BASELINE}
+              label="平均线"
+              stroke="#94b8b5"
+              strokeDasharray="4 3"
+            />
+            <Bar dataKey="value">
+              <LabelList
+                dataKey="value"
+                position="top"
+                formatter={(v) => Number(v).toFixed(2)}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="chart-card">
+        <div className="chart-title">五维度雷达图</div>
+        <ResponsiveContainer width="100%" height={260}>
+          <RadarChart data={radarData}>
+            <PolarGrid />
+            <PolarAngleAxis dataKey="type" />
+            <PolarRadiusAxis domain={[1, 5]} />
+            <Radar
+              name="平均分"
+              dataKey="value"
+              stroke="#2b7364"
+              fill="#9de3d1"
+              fillOpacity={0.6}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+
+    {/* 个人画像摘要 */}
+    <div className="profile">
+      <div className="profile-title">个人画像摘要</div>
+      <div className="profile-grid">
+        <div className="profile-card">
+          <div className="profile-subtitle">优势倾向</div>
+          <ul className="bullet">
+            {summaryAdvices.slice(0, 2).map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="profile-card">
+          <div className="profile-subtitle">可能的风险点</div>
+          <ul className="bullet">
+            <li>较弱维度：{CN[weakness]}（建议优先改进）。</li>
+            <li>
+              做法：从该维度“实操建议”中挑 1–2 条，设置 2 周可验证的小目标。
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {/* 维度详情 */}
+    <div className="detail">
+      {["O", "C", "E", "A", "N"].map((t) => {
+        const lev = levelTag(avgs[t]);
+        const advice = traitAdvice(t, avgs[t]);
+        const subs = SUBFACTORS[t];
+        const values = subScores[t];
+        const data = subs.map((name, idx) => ({
+          name,
+          value: values[idx] || 0,
+        }));
+        return (
+          <div className="detail-card" key={t}>
+            <div className="detail-head">
+              <div className="detail-name">
+                {CN[t]}（{t}）
+              </div>
+              <div className="detail-score">
+                <span className={lev.className}>{lev.tag}</span>
+                <span className="num" style={{ marginLeft: 8 }}>
+                  {fmt(avgs[t])}
+                </span>
+              </div>
+            </div>
+            <div className="detail-brief">
+              {t === "O" && "想象力 / 创新 / 接纳新事物"}
+              {t === "C" && "自律 / 条理 / 目标达成"}
+              {t === "E" && "活力 / 表达 / 社交倾向"}
+              {t === "A" && "共情 / 合作 / 信任"}
+              {t === "N" && "情绪调节 / 抗压"}
+            </div>
+
+            <div className="subchart">
+              <div className="chart-title sm">子因子分布</div>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis domain={[1, 5]} />
                   <Tooltip />
-                  <ReferenceLine y={BASELINE} label="平均线" stroke="#94b8b5" strokeDasharray="4 3" />
-                  <Bar dataKey="value">
-                    <LabelList dataKey="value" position="top" formatter={(v) => Number(v).toFixed(2)} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {data.map((_, idx) => {
+                      const shadeSets = {
+                        O: ["#0f8b83", "#27a59c", "#49d3c7", "#7de4da", "#baf2eb"],
+                        C: ["#1f4fb8", "#3670cc", "#5d94e0", "#8bb8f2", "#bcd5fa"],
+                        E: ["#c46a00", "#e38320", "#f6ad55", "#f9c98b", "#fde2b9"],
+                        A: ["#b3367d", "#d15595", "#f687b3", "#fab8d2", "#fcd7e8"],
+                        N: ["#5e34b1", "#7a4dcc", "#9f7aea", "#c3a5f4", "#e2ccfb"],
+                      };
+                      return <Cell key={idx} fill={shadeSets[t][idx]} />;
+                    })}
+                    <LabelList dataKey="value" position="top" />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="chart-card">
-              <div className="chart-title">五维度雷达图</div>
-              <ResponsiveContainer width="100%" height={260}>
-                <RadarChart data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="type" />
-                  <PolarRadiusAxis domain={[1, 5]} />
-                  <Radar
-                    name="平均分"
-                    dataKey="value"
-                    stroke="#2b7364"
-                    fill="#9de3d1"
-                    fillOpacity={0.6}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          {/* 个人画像摘要 */}
-          <div className="profile">
-            <div className="profile-title">个人画像摘要</div>
-            <div className="profile-grid">
-              <div className="profile-card">
-                <div className="profile-subtitle">优势倾向</div>
+            <div className="advice">
+              <div>
+                <div className="advice-title">您可能的表现</div>
                 <ul className="bullet">
-                  {summaryAdvices.slice(0, 2).map((s, i) => (
+                  {advice.show.map((s, i) => (
                     <li key={i}>{s}</li>
                   ))}
                 </ul>
               </div>
-              <div className="profile-card">
-                <div className="profile-subtitle">可能的风险点</div>
+              <div>
+                <div className="advice-title">提升建议</div>
                 <ul className="bullet">
-                  <li>较弱维度：{CN[weakness]}（建议优先改进）。</li>
-                  <li>做法：从该维度“实操建议”中挑 1–2 条，设置 2 周可验证的小目标。</li>
+                  {advice.tips.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
+        );
+      })}
+    </div>
 
-          {/* 维度详情 */}
-          <div className="detail">
-            {["O", "C", "E", "A", "N"].map((t) => {
-              const lev = levelTag(avgs[t]);
-              const advice = traitAdvice(t, avgs[t]);
-              const subs = SUBFACTORS[t];
-              const values = subScores[t];
-              const data = subs.map((name, idx) => ({ name, value: values[idx] || 0 }));
-              return (
-                <div className="detail-card" key={t}>
-                  <div className="detail-head">
-                    <div className="detail-name">
-                      {CN[t]}（{t}）
-                    </div>
-                    <div className="detail-score">
-                      <span className={lev.className}>{lev.tag}</span>
-                      <span className="num" style={{ marginLeft: 8 }}>{fmt(avgs[t])}</span>
-                    </div>
-                  </div>
-                  <div className="detail-brief">
-                    {t === "O" && "想象力 / 创新 / 接纳新事物"}
-                    {t === "C" && "自律 / 条理 / 目标达成"}
-                    {t === "E" && "活力 / 表达 / 社交倾向"}
-                    {t === "A" && "共情 / 合作 / 信任"}
-                    {t === "N" && "情绪调节 / 抗压"}
-                  </div>
+    {/* —— 东方智慧分析 —— */}
+    <div className="detail-card" style={{ marginTop: 16 }}>
+      <div className="detail-head">
+        <div className="detail-name">东方智慧分析（阴阳八卦人格）</div>
+        <div className="detail-score">
+          <span className="num">
+            您的主象：{BAGUA[baguaKey].icon} {BAGUA[baguaKey].name}
+          </span>
+        </div>
+      </div>
 
-                  <div className="subchart">
-                    <div className="chart-title sm">子因子分布</div>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis domain={[1, 5]} />
-                        <Tooltip />
-
-                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                          {data.map((_, idx) => {
-                            // 为每个维度定义5阶纯色明度（从深到浅）
-                            const shadeSets = {
-                              O: ["#0f8b83", "#27a59c", "#49d3c7", "#7de4da", "#baf2eb"], // 绿青
-                              C: ["#1f4fb8", "#3670cc", "#5d94e0", "#8bb8f2", "#bcd5fa"], // 蓝
-                              E: ["#c46a00", "#e38320", "#f6ad55", "#f9c98b", "#fde2b9"], // 橙
-                              A: ["#b3367d", "#d15595", "#f687b3", "#fab8d2", "#fcd7e8"], // 粉
-                              N: ["#5e34b1", "#7a4dcc", "#9f7aea", "#c3a5f4", "#e2ccfb"], // 紫
-                            };
-                            return <Cell key={idx} fill={shadeSets[t][idx]} />;
-                          })}
-                          <LabelList dataKey="value" position="top" />
-                        </Bar>
-
-
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="advice">
-                    <div>
-                      <div className="advice-title">您可能的表现</div>
-                      <ul className="bullet">
-                        {advice.show.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="advice-title">提升建议</div>
-                      <ul className="bullet">
-                        {advice.tips.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+      <div className="profile-grid" style={{ marginTop: 12 }}>
+        {["乾", "坤", "震", "巽", "坎", "离", "艮", "兑"].map((k) => {
+          const it = BAGUA[k];
+          return (
+            <div className="profile-card" key={k}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 6,
+                }}
+              >
+                <img
+                  src={svgBadge(it.icon)}
+                  alt={it.name}
+                  width={44}
+                  height={44}
+                />
+                <div className="profile-subtitle">{it.name}</div>
+              </div>
+              <div className="detail-brief" style={{ marginBottom: 6 }}>
+                <strong>象征含义：</strong>
+                {it.meaning}
+              </div>
+              <div className="advice" style={{ gridTemplateColumns: "1fr" }}>
+                <div>
+                  <div className="advice-title">心理特征</div>
+                  <ul className="bullet">
+                    {it.psyche.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* —— 东方智慧分析 —— */}
-          <div className="detail-card" style={{ marginTop: 16 }}>
-            <div className="detail-head">
-              <div className="detail-name">东方智慧分析（阴阳八卦人格）</div>
-              <div className="detail-score">
-                <span className="num">您的主象：{BAGUA[baguaKey].icon} {BAGUA[baguaKey].name}</span>
+                <div>
+                  <div className="advice-title">成长方向</div>
+                  <ul className="bullet">
+                    {it.grow.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="desc" style={{ marginTop: 6 }}>
+                <em>文化启示：</em> {it.hint}
               </div>
             </div>
+          );
+        })}
+      </div>
+    </div>
 
-            {/*  /* 4×2 网格展示 */}
-              <div className="profile-grid" style={{ marginTop: 12 }}>
-                {["乾","坤","震","巽","坎","离","艮","兑"].map((k) => {
-                  const it = BAGUA[k];
-                  return (
-                    <div className="profile-card" key={k}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                        <img src={svgBadge(it.icon)} alt={it.name} width={44} height={44} />
-                        <div className="profile-subtitle">{it.name}</div>
-                      </div>
-                      <div className="detail-brief" style={{ marginBottom: 6 }}>
-                        <strong>象征含义：</strong>{it.meaning}
-                      </div>
-                      <div className="advice" style={{ gridTemplateColumns: "1fr" }}>
-                        <div>
-                          <div className="advice-title">心理特征</div>
-                          <ul className="bullet">{it.psyche.map((s, i) => <li key={i}>{s}</li>)}</ul>
-                        </div>
-                        <div>
-                          <div className="advice-title">成长方向</div>
-                          <ul className="bullet">{it.grow.map((s, i) => <li key={i}>{s}</li>)}</ul>
-                        </div>
-                      </div>
-                      <div className="desc" style={{ marginTop: 6 }}>
-                        <em>文化启示：</em> {it.hint}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-          
-          </div>
+    {/* 按钮：只保留导出报告 */}
+    <div className="nav" style={{ justifyContent: "center" }}>
+      <button
+        className="btn primary"
+        onClick={handleDownloadPDF}
+        disabled={exporting}
+      >
+        {exporting ? "生成中..." : "📄 导出报告"}
+      </button>
+    </div>
+  </motion.div>
+)}
 
-          {/* 按钮 */}
-          <div className="nav" style={{ justifyContent: "center" }}>
-            <button className="btn ghost" onClick={() => window.location.reload()}>
-              重新测评
-            </button>
-            <button className="btn primary" onClick={handleDownloadPDF} disabled={exporting}>
-              {exporting ? "生成中..." : "📄 导出报告"}
-            </button>
-          </div>
-        </motion.div>
-      )}
 
       <footer className="footer">© 2025 自愈力研究所 | OCEAN 测评报告</footer>
     </div>
