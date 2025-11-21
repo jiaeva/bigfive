@@ -1,0 +1,15 @@
+{
+  "build": {
+    "builder": "static",
+    "buildCommand": "npm run build",
+    "output": "build"
+  },
+  "static": {
+    "headers": {
+      "/**": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    "notFoundPage": "/index.html"
+  }
+}
