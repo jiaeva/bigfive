@@ -783,9 +783,13 @@ const handleDownloadPDF = async () => {
         <div className="chart-title">五维度雷达图</div>
         <ResponsiveContainer width="100%" height={260}>
           <RadarChart data={radarData}>
-            <PolarGrid />
+            <PolarGrid/>
             <PolarAngleAxis dataKey="type" />
-            <PolarRadiusAxis domain={[1, 5]} />
+            <PolarRadiusAxis domain={[1, 5]} 
+            tick={false}
+            axisLine={false}
+            tickLine={false}
+            />
             <Radar
               name="平均分"
               dataKey="value"
