@@ -1,65 +1,208 @@
-/* —— 基础 —— */
+/* =========================================================
+   ===============  基础样式  ==============================
+   ========================================================= */
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+
 body {
   margin: 0;
-  font-family: "Noto Sans CJK SC","Noto Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  background: linear-gradient(180deg,#f1fffb 0%,#e7fbf6 100%);
+  font-family: "Noto Serif SC","ZCOOL XiaoWei","Noto Sans CJK SC","Noto Sans SC",
+    system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei",sans-serif;
+
+  /* 🌄 —— 网页默认背景（可固定） —— */
+  background: url("./assets/bg-chinese.png") no-repeat center top fixed;
+  background-size: cover;
   color: #163f3a;
 }
-.app { min-height: 100%; display: flex; flex-direction: column; padding: 24px; align-items: center; }
-.app-header { text-align: center; margin-bottom: 16px; }
-.app-header h1 { margin: 0; font-size: 28px; font-weight: 800; color: #0e3c36; }
-.app-header .sub { margin-top: 6px; color: #3a5a58; font-size: 14px; }
 
-/* —— 卡片 —— */
+/* =========================================================
+   ===============  容器（透明）  ==========================
+   ========================================================= */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  align-items: center;
+  background: transparent;
+  position: relative;   /* ★ PDF 背景需要定位 */
+}
+
+/* =========================================================
+   ===============  顶部标题  ===============================
+   ========================================================= */
+.app-header { text-align: center; margin-bottom: 16px; }
+
+.app-header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  color: #0b3b32;
+  font-family: "Ma Shan Zheng","STKaiti","KaiTi","Songti SC",serif;
+}
+
+.app-header .sub {
+  margin-top: 6px;
+  color: #3a5a58;
+  font-size: 14px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 500;
+  color:#0e3c36;
+  margin:6px 0 18px;
+  font-family: "Ma Shan Zheng","STKaiti","KaiTi","Songti SC",serif;
+}
+
+.section-title.center { text-align:center; }
+
+/* =========================================================
+   ===============  主体卡片（透明）  ======================
+   ========================================================= */
 .card {
   width: 100%;
   max-width: 1080px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(22,63,58,.08);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.03);
   padding: 24px;
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
-/* —— 进度 —— */
+/* =========================================================
+   ===============  进度条  =================================
+   ========================================================= */
 .progress-wrap { margin-bottom: 16px; }
-.progress-top { display:flex; justify-content:space-between; color:#1b5e57; font-size:14px; margin-bottom:8px; }
-.progress-bar { height:10px; background:#e8f7f4; border-radius:999px; overflow:hidden; }
-.progress-inner { height:100%; width:0%; background:linear-gradient(90deg,#a1efe6 0%,#4fd1c5 60%,#2b7a78 100%); transition:width .24s ease; }
+.progress-top {
+  display:flex;
+  justify-content:space-between;
+  color:#1b5e57;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.progress-bar {
+  height:10px;
+  background:rgba(229, 247, 243, 0.7);
+  border-radius:999px;
+  overflow:hidden;
+}
+.progress-inner {
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#a1efe6 0%,#4fd1c5 60%,#2b7a78 100%);
+  transition:width .24s ease;
+}
 
-/* —— 标题 —— */
-.section-title { font-size:20px; font-weight:700; color:#0e3c36; margin:6px 0 18px; }
-.section-title.center { text-align:center; }
-
-/* —— 问卷 —— */
+/* =========================================================
+   ===============  题目区域  ===============================
+   ========================================================= */
 .q-list { display:grid; gap:18px; }
-.q-item { padding:16px; border:1px solid #eaf6f3; border-radius:14px; background:#fcfffe; }
-.q-text { display:flex; align-items:baseline; gap:8px; font-size:16px; color:#153f3a; margin-bottom:12px; }
+
+.q-item {
+  padding:16px;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:14px;
+  background:rgba(255,255,255,0.08);
+}
+
+.q-text {
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  font-size:16px;
+  color:#153f3a;
+  margin-bottom:12px;
+}
 .q-id { min-width:24px; color:#2b7a78; font-weight:700; }
 
-/* —— Likert —— */
-.likert { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; }
-.likert-option { user-select:none; display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 6px; border-radius:12px; border:1px solid transparent; background:#fff; transition:all .16s ease; }
-.likert-option input { display:none; }
-.likert-option .dot { width:32px; height:32px; border-radius:999px; background:radial-gradient(circle at 30% 30%,#e8f7f4 0%,#c8f1ea 100%); box-shadow:inset 0 0 0 2px #cfeee8, 0 4px 10px rgba(0,0,0,.06); transition:transform .14s ease, box-shadow .14s ease; }
-.likert-option .lbl { font-size:12px; color:#3a5a58; }
-.likert-option:hover { border-color:#dbf5f0; background:#f7fffd; }
-.likert-option.active { border-color:#a6efe6; background:#f2fffd; }
-.likert-option.active .dot { transform:scale(1.12); box-shadow:inset 0 0 0 3px #7ee8db, 0 6px 14px rgba(43,122,120,.2); background:radial-gradient(circle at 30% 30%,#bff5ec 0%,#63e1d4 100%); }
-.likert-option.active .lbl { color:#0e3c36; font-weight:700; }
+/* Likert */
+.likert { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; }
 
-/* —— 按钮 —— */
+.likert-option {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding:10px 6px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.10);
+  transition:all .16s ease;
+}
+.likert-option input { display:none; }
+
+.likert-option .dot {
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.96), rgba(223,214,198,0.95));
+  box-shadow: inset 0 0 0 1px rgba(96,84,68,0.55), 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.likert-option .lbl { font-size:12px; color:#3a5a58; }
+
+.likert-option:hover {
+  border-color: rgba(140, 116, 82, 0.35);
+  background: rgba(248, 244, 236, 0.9);
+}
+.likert-option.active {
+  border-color: rgba(140, 116, 82, 0.6);
+  background: rgba(247, 240, 228, 0.95);
+}
+.likert-option.active .dot {
+  transform:scale(1.08);
+  background: radial-gradient(circle at 30% 30%, #fdf8ec, #d0c2a2);
+  box-shadow: inset 0 0 0 2px rgba(120,92,60,0.85), 0 5px 14px rgba(0,0,0,0.12);
+}
+.likert-option.active .lbl {
+  color:#0e3c36;
+  font-weight:700;
+}
+
+/* =========================================================
+   ===============  按钮  ===================================
+   ========================================================= */
 .nav { margin-top: 20px; display:flex; gap:12px; justify-content:flex-end; }
 .nav.center { justify-content:center; }
-.btn { appearance:none; border:none; cursor:pointer; padding:12px 18px; border-radius:12px; font-weight:700; font-size:14px; transition:all .16s ease; }
-.btn.primary { color:#fff; background:linear-gradient(90deg,#2bb5a9 0%,#2b7a78 100%); box-shadow:0 8px 18px rgba(43,122,120,.22); }
-.btn.primary:hover { transform: translateY(-1px); }
-.btn.primary:disabled { opacity:.5; cursor:not-allowed; }
-.btn.ghost { color:#2b7a78; background:#ecfffb; border:1px solid #c8efe8; }
-.btn.ghost:hover { background:#f7fffd; }
 
-/* —— 摘要卡片 —— */
+.btn {
+  appearance:none;
+  border:none;
+  cursor:pointer;
+  padding:12px 18px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:14px;
+  transition:all .16s ease;
+}
+
+/* Primary */
+.btn.primary {
+  color: #fdf8ec;
+  background: rgba(23, 49, 43, 0.92);
+  border: 1px solid rgba(10, 28, 24, 0.9);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+.btn.primary:hover {
+  background: rgba(23, 49, 43, 1);
+  transform: translateY(-1px);
+}
+.btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Ghost */
+.btn.ghost {
+  color: #17312b;
+  background: rgba(253, 248, 236, 0.92);
+  border: 1px solid rgba(23, 49, 43, 0.45);
+}
+.btn.ghost:hover { background: rgba(250, 242, 226, 0.98); }
+
+/* =========================================================
+   ===============  结果页 - 摘要  ==========================
+   ========================================================= */
 .summary-grid {
   display:grid;
   gap:14px;
@@ -67,50 +210,101 @@ body {
   margin-bottom: 16px;
 }
 .sum-card {
-  background:#f6fffd;
-  border:1px solid #dbf5f0;
-  border-radius:14px;
-  padding:14px;
+  background: rgba(247,255,253,0.22);
+  border: 1px solid rgba(219,245,240,0.45);
+  border-radius: 14px;
+  padding: 14px;
 }
-.sum-top { display:flex; align-items:center; justify-content:space-between; }
+.sum-top { display:flex; justify-content:space-between; align-items:center; }
 .sum-name { font-weight:800; color:#0e3c36; }
-.sum-score { font-size:24px; font-weight:800; color:#2b7a78; margin:6px 0; }
+.sum-score { font-size:24px; font-weight:800; color:#2b7a78; }
 .sum-brief { font-size:12px; color:#3a5a58; }
+
 .tag { padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; }
 .tag-high { background:#e5fff7; color:#0b6b5e; border:1px solid #b9f5e5; }
-.tag-mid { background:#f1fff5; color:#2e6b3a; border:1px solid #c6f1d1; }
-.tag-low { background:#fff4f1; color:#8f2a2a; border:1px solid #ffd8cf; }
+.tag-mid  { background:#f1fff5; color:#2e6b3a; border:1px solid #c6f1d1; }
+.tag-low  { background:#fff4f1; color:#8f2a2a; border:1px solid #ffd8cf; }
 
-/* —— 图表区 —— */
-.charts-grid { display:grid; gap:14px; grid-template-columns: 1fr 1fr; margin: 6px 0 16px; }
-.chart-card { background:#ffffff; border:1px solid #e8f7f4; border-radius:14px; padding:12px; }
+/* =========================================================
+   ===============  图表区  ================================
+   ========================================================= */
+.charts-grid {
+  display:grid;
+  gap:14px;
+  grid-template-columns: 1fr 1fr;
+  margin: 6px 0 16px;
+}
+.chart-card {
+  background:rgba(255,255,255,0.26);
+  border:1px solid rgba(232,247,244,0.7);
+  border-radius:14px;
+  padding:12px;
+}
 .chart-title { font-weight:800; color:#0e3c36; margin-bottom:8px; }
-.chart-title.sm { font-weight:700; font-size:14px; }
+.chart-title.sm { font-size:14px; }
 
-/* —— 个人画像 —— */
+/* =========================================================
+   ===============  个人画像  ================================
+   ========================================================= */
 .profile { margin: 8px 0 14px; }
 .profile-title { font-size:16px; font-weight:800; color:#0e3c36; margin-bottom:8px; }
-.profile-grid { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
-.profile-card { background:#f7fffd; border:1px solid #dbf5f0; border-radius:12px; padding:12px; }
+
+.profile-grid {
+  display:grid;
+  gap:12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.profile-card {
+  background: rgba(247,255,253,0.22);
+  border: 1px solid rgba(219,245,240,0.45);
+  border-radius: 12px;
+  padding: 12px;
+}
 .profile-subtitle { font-weight:800; color:#2b7a78; margin-bottom:6px; }
+
 .bullet { margin:0; padding-left:18px; }
 .bullet li { margin:6px 0; color:#194d46; }
 
-/* —— 详情 —— */
+/* =========================================================
+   ===============  维度详情  ================================
+   ========================================================= */
 .detail { display:grid; gap:14px; }
-.detail-card { border:1px solid #eaf6f3; border-radius:14px; padding:14px; background:#ffffff; }
-.detail-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+
+.detail-card {
+  border: 1px solid rgba(234,246,243,0.20);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,0.10);
+}
+.detail-head {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
 .detail-name { font-size:16px; font-weight:800; color:#0e3c36; }
-.detail-score .num { margin-left:8px; font-size:18px; font-weight:800; color:#2b7a78; }
+.detail-score .num {
+  margin-left:8px;
+  font-size:18px;
+  font-weight:800;
+  color:#2b7a78;
+}
 .detail-brief { color:#3a5a58; font-size:13px; margin-bottom:8px; }
-.subchart { margin: 6px 0 10px; }
-.advice { display:grid; gap:10px; grid-template-columns: 1fr 1fr; }
-.advice-title { font-weight:800; color:#0e3c36; margin-bottom:6px; }
 
-/* —— 页脚 —— */
-.footer { text-align:center; color:#6b8f8c; font-size:12px; margin:20px 0 8px; }
 
-/* —— 响应式 —— */
+/* ===============================
+   PDF 导出模式背景（最终版）
+   =============================== */
+.app.pdf-mode {
+  position: relative;
+  background: transparent !important;
+}
+
+
+
+/* =========================================================
+   ===============  响应式  ================================
+   ========================================================= */
 @media (max-width: 980px) {
   .charts-grid { grid-template-columns: 1fr; }
 }
@@ -124,41 +318,21 @@ body {
   .q-text { font-size:15px; }
   .btn { padding:11px 16px; }
 }
-/* PDF导出专用样式 */
-.pdf-export-wrapper {
-  position: relative;
+
+/* =========================================================
+   ===============  底部  ==================================
+   ========================================================= */
+.footer {
+  text-align:center;
+  color:#6b8f8c;
+  font-size:12px;
+  margin:20px 0 8px;
 }
 
-.pdf-section {
-  page-break-inside: avoid;
-  break-inside: avoid;
-  padding: 20px 0;
-  background: white;
-}
-
-.pdf-section:not(:first-child) {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 2px solid #f0f0f0;
-}
-
-/* 导出时隐藏不必要的元素 */
-.pdf-exporting .nav {
-  display: none !important;
-}
-
-/* 确保图表在导出时完整显示 */
-.pdf-exporting .chart-card,
-.pdf-exporting .detail-card {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-/* 导出时的细节优化 */
-.pdf-exporting .subchart {
-  min-height: 240px;
-}
-
-.pdf-exporting .recharts-wrapper {
-  margin: 0 auto;
+/* ===============================
+   PDF 导出模式的背景（壁纸可截图）
+   =============================== */
+.app.pdf-mode {
+  background: url("./assets/bg-chinese.png") repeat-y top center !important;
+  background-size: 100% auto !important;   /* 宽度铺满，高度自动 */
 }

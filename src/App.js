@@ -1,5 +1,10 @@
 import React, { useMemo, useState, useRef, useEffect} from "react";
 import "./App.css";
+import html2pdf from "html2pdf.js";
+import bgImage from "./assets/bg-chinese.png";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+
 import {
   Radar,
   RadarChart,
@@ -18,8 +23,7 @@ import {
   Cell,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+
 
 /** —— 配色 —— */
 const COLORS = {
@@ -448,97 +452,59 @@ function App() {
   /** —— 八卦象限 —— */
   const baguaKey = baguaKeyByScores(avgs);
 
-  /** —— PDF 导出 —— */
-/** —— PDF 导出（单页 + 背景水印均匀、不重复、不挡内容） —— */
+
 const handleDownloadPDF = async () => {
-  const element = resultRef.current;
-  if (!element) return;
+  const dom = resultRef.current;
+  setExporting(true);
+
+  // ⭐ 启动 PDF 模式（让 .app 加上壁纸背景）
+  document.querySelector(".app").classList.add("pdf-mode");
+
+  // 隐藏按钮
+  const buttons = document.querySelectorAll(".nav button");
+  buttons.forEach(btn => (btn.style.visibility = "hidden"));
+
+  window.scrollTo(0, 0);
 
   try {
-    setExporting(true);
-
-    // 隐藏按钮，防止出现在 PDF 中
-    const buttons = element.querySelectorAll(".nav button");
-    buttons.forEach(btn => (btn.style.visibility = "hidden"));
-
-    // 等待页面完全渲染
-    window.scrollTo(0, 0);
-    await new Promise(r =>
-      requestAnimationFrame(() => requestAnimationFrame(r))
-    );
-
-    // 捕获整个结果页面
-    const totalWidth = element.scrollWidth;
-    const totalHeight = element.scrollHeight;
-    const canvas = await html2canvas(element, {
-      scale: 2.5,
+    // ⭐ 高分辨率截图
+    const canvas = await html2canvas(dom, {
+      scale: 2,
       useCORS: true,
-      backgroundColor: "#ffffff",
-      width: totalWidth,
-      height: totalHeight,
-      windowWidth: totalWidth,
-      windowHeight: totalHeight,
       scrollX: 0,
-      scrollY: -window.scrollY,
+      scrollY: 0,
     });
 
-    // 创建副本画布加水印
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const ctx = tempCanvas.getContext("2d");
-    ctx.drawImage(canvas, 0, 0);
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
 
-    // ======== 添加淡色水印 ========
-    const watermarkText = "自愈力研究所 · 测评报告";
-    ctx.font = "bold 80px 'Noto Sans SC', sans-serif";
-    ctx.fillStyle = "rgba(180, 220, 220, 0.10)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    const A4_WIDTH_MM = 210;
+    const pxPerMM = 96 / 25.4;
+    const pdfWidthPx = A4_WIDTH_MM * pxPerMM;
+    const scale = pdfWidthPx / canvas.width;
+    const pdfHeightMM = (canvas.height * scale) / pxPerMM;
 
-    const angle = (-35 * Math.PI) / 180;
-    ctx.save();
-    ctx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-    ctx.rotate(angle);
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: [A4_WIDTH_MM, pdfHeightMM],
+      orientation: "portrait",
+      compress: true,
+    });
 
-    // 根据旋转角度调整实际间距（保持视觉均匀）
-    const spacing = 1100; // 原始间距
-    const xSpacing = spacing / Math.cos(angle); // 水平方向补偿
-    const ySpacing = spacing / Math.cos(angle); // 垂直方向补偿
+    pdf.addImage(imgData, "JPEG", 0, 0, A4_WIDTH_MM, pdfHeightMM);
+    pdf.save("自愈力研究所_OCEAN_测评报告.pdf");
 
-    const cols = Math.ceil(tempCanvas.width / xSpacing) + 2;
-    const rows = Math.ceil(tempCanvas.height / ySpacing) + 2;
+  } catch (error) {
+    alert("PDF生成失败：" + error.message);
 
-    for (let i = -cols; i <= cols; i++) {
-      for (let j = -rows; j <= rows; j++) {
-        ctx.fillText(watermarkText, i * xSpacing, j * ySpacing);
-      }
-    }
-
-    ctx.restore();
-    // ======== 水印结束 ========
-
-    // 输出 PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth() - 16;
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const customPageHeight = imgHeight + 16;
-    pdf.internal.pageSize.height = customPageHeight;
-    pdf.setFont("NotoSansCJKsc-Regular", "normal");
-    pdf.addImage(tempCanvas.toDataURL("image/png", 1.0), "PNG", 8, 8, imgWidth, imgHeight);
-
-    pdf.save("自愈力研究所_OCEAN测评报告.pdf");
-  } catch (e) {
-    console.error(e);
-    alert("导出失败，请重试。");
   } finally {
-    // 恢复按钮
-    const buttons = resultRef.current?.querySelectorAll(".nav button");
-    buttons?.forEach(btn => (btn.style.visibility = "visible"));
+    // ⭐ 关闭 PDF 模式（恢复原样）
+    document.querySelector(".app").classList.remove("pdf-mode");
+
+    buttons.forEach(btn => (btn.style.visibility = "visible"));
     setExporting(false);
   }
 };
+
 
 
   /** —— 页面动画 —— */
@@ -549,7 +515,7 @@ const handleDownloadPDF = async () => {
   };
 
   return (
-    <div className="app">
+    <div className="app" ref={resultRef}>
       <header className="app-header">
         <h1>大五人格测评（OCEAN）</h1>
         <p className="sub">比 MBTI 更稳定、更精准的科学人格模型 · 自愈力研究所</p>
@@ -564,11 +530,17 @@ const handleDownloadPDF = async () => {
       padding: "45px 30px",
       textAlign: "center",
       borderRadius: 24,
-      background: "#ffffff",
-      border: "1px solid #e3f1ef",
-      boxShadow: "0 10px 30px rgba(0,0,0,0.07)",
+
+      /* === 新增：透明 + 毛玻璃（参考你第二页） === */
+      background: "rgba(255, 255, 255, 0.12)",
+      backdropFilter: "blur(0px)",
+      WebkitBackdropFilter: "blur(0px)",
+
+      border: "1px solid rgba(255,255,255,0.15)",  // 跟你题目页的 q-item 保持一致
+      boxShadow: "0 10px 26px rgba(0,0,0,0.03)"
     }}
-  >
+  > 
+
     <div
       style={{
         marginBottom: 18,
@@ -607,33 +579,38 @@ const handleDownloadPDF = async () => {
     </p>
 
     <div
-      style={{
-        marginTop: 32,
-        padding: "22px 26px",
-        borderRadius: 18,
-        background: "linear-gradient(135deg, #e5f8f4 0%, #d4efe9 100%)",
-        textAlign: "left",
-        fontSize: 15.5,
-        color: "#1f4745",
-        lineHeight: 1.8,
-        boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div
-        style={{
-          fontWeight: "bold",
-          marginBottom: 6,
-          color: "#2b7a78",
-        }}
-      >
-        📌 测评说明
-      </div>
-      <ul style={{ paddingLeft: 20, margin: 0 }}>
-        <li>你的结果已成功被系统记录。</li>
-        <li>系统检测到你之前已经完成过此测评，因此当前入口已关闭。</li>
-        <li>本测评侧重趣味与自我认知，仅供参考，不代表专业心理结论。</li>
-      </ul>
-    </div>
+  style={{
+    marginTop: 32,
+    padding: "22px 26px",
+    borderRadius: 18,
+
+    /* 更柔和、透明、贴合水墨风 */
+    background: "rgba(255, 255, 255, 0.18)",
+    border: "1px solid rgba(255, 255, 255, 0.25)",
+
+    textAlign: "left",
+    fontSize: 15.5,
+    color: "#1f4745",
+    lineHeight: 1.8,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+  }}
+>
+  <div
+    style={{
+      fontWeight: "bold",
+      marginBottom: 6,
+      color: "#2b7a78",
+    }}
+  >
+    📌 测评说明
+  </div>
+  <ul style={{ paddingLeft: 20, margin: 0 }}>
+    <li>你的结果已成功被系统记录。</li>
+    <li>系统检测到你之前已经完成过此测评，因此当前入口已关闭。</li>
+    <li>本测评侧重趣味与自我认知，仅供参考，不代表专业心理结论。</li>
+  </ul>
+</div>
+
   </div>
 ) : !submitted ? (
   /* —— 问卷 —— */
@@ -724,7 +701,6 @@ const handleDownloadPDF = async () => {
 ) : (
   /* —— 结果页 —— */
   <motion.div
-    ref={resultRef}
     className="card"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
