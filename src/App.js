@@ -623,6 +623,26 @@ const handleDownloadPDF = async () => {
         animate="animate"
         exit="exit"
       >
+      {page === 1 && (
+          <div className="scale-instruction" style={{
+            marginBottom: 24,
+            padding: '16px',
+            background: 'rgba(255,255,255,0.26)',
+            borderRadius: 8,
+          }}>
+            <strong>评分说明</strong>
+            <p>请根据您自身长期情况，对下列陈述使用 1–5 分进行评分：</p>
+            <ul style={{ marginLeft: 20 }}>
+              <li>1 = 完全不符合 / 从不</li>
+              <li>2 = 较少符合 / 很少</li>
+              <li>3 = 中立 / 有时 / 不确定</li>
+              <li>4 = 较为符合 / 经常符合</li>
+              <li>5 = 非常符合 / 总是符合</li>
+            </ul>
+            <p>“符合程度” 是指该陈述与您平时的性格 / 习惯 / 情绪 / 倾向的整体匹配情况 (而非暂时感受或某次经历)。请根据您的第一感觉作答，不要过度思考。</p>
+          </div>
+        )}
+
         <div className="progress-wrap">
           <div className="progress-top">
             <span>进度</span>
